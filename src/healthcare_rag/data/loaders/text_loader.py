@@ -1,11 +1,11 @@
 from typing import List
 from pathlib import Path
 
-from langchain_community.document_loaders import TextLoader
-from sympy import content
-from healthcare_rag.data.loaders.base_loader import Baseloader, Document
 
-class TextLoader(Baseloader):
+from sympy import content
+from healthcare_rag.data.loaders.base_loader import BaseLoader, Document
+
+class TextLoader(BaseLoader):
     SUPPORTED_EXTENSIONS={'.txt','.md','.rst','.log'}
     def validate(self,source:str)-> bool:
         path=Path(source)
@@ -22,6 +22,6 @@ class TextLoader(Baseloader):
         metadata={
             "source_type": "text",
             "filename": path.name,
-            "file_size":path.stat().st.size,
+            "file_size":path.stat().st_size,
         } 
         return [Document(content=content,metadata=metadata,source=str(path))]

@@ -80,12 +80,12 @@ class RAGPipeline:
         )
 
         sources=[
-            doc.get('metadata',{}).get('sources','unknown')
+            doc.get('metadata',{}).get('source','unknown')
             for doc in retrieved_docs
         ]
         return {
             "answer":answer,
-            "sources": list(set(sources)),
+            "source": list(set(sources)),
             "retrieved_count": len(retrieved_docs),
             "context": context
         }          

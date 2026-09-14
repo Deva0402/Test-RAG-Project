@@ -1,7 +1,5 @@
 from pathlib import Path
 from typing import List, Union
-
-
 from healthcare_rag.data.loaders.base_loader import Document
 from healthcare_rag.data.loaders.pdf_loaders import PDFLoader
 from healthcare_rag.data.loaders.json_loader import JSONLoader
@@ -45,15 +43,17 @@ class IngestionPipeline:
 
         if suffix=='.pdf':
             return self.pdf_loader.load(str(file_path))
-        elif suffix in ['.json','.jsonl']:
+        if suffix in ['.json','.jsonl']:
             return self.json_loader.load(str(file_path))
+        if suffix in {".txt", ".md", ".rst", ".log"}:
+            return self.text_loader.load(str(file_path))
         else:
             print(f"skipping unsupported file: {file_path}")
             return []
     def _load_directory(self,dir_path:Path)->List[Document]:
         documents=[]
 
-        supported_extensions={'.pdf','.json','.jsonl','.txt',',md','.rst','.log'}
+        supported_extensions={'.pdf','.json','.jsonl','.txt','.md','.rst','.log'}
 
         for file_path in dir_path.rglob('*'):
             if file_path.is_file() and file_path.suffix.lower() in supported_extensions:

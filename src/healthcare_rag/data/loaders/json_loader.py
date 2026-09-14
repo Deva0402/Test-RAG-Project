@@ -8,10 +8,12 @@ common for medical q&a dataset
 import json
 from typing import List,Dict,Any
 from pathlib import Path
-from healthcare_rag.data.loaders.base_loader import Baseloader, Document
 
-class JSONLoader(Baseloader):
-    def __init__(self,text_field: str="text",metadata_fields: List[str]=None):
+from git import Optional
+from healthcare_rag.data.loaders.base_loader import BaseLoader, Document
+
+class JSONLoader(BaseLoader):
+    def __init__(self,text_field: str="text",metadata_fields: Optional[List[str]]=None):
         self.text_field=text_field
         self.metadata_fields=metadata_fields or []
 
@@ -46,7 +48,7 @@ class JSONLoader(Baseloader):
                         documents.append(doc)
         return documents
 
-    def _parse_item(self,item: Dict[str,Any],path:Path,index: int) ->Document:
+    def _parse_item(self,item: Dict[str,Any],path:Path,index: int) ->Optional[Document]:
         if self.text_field not in item:
             return None
 

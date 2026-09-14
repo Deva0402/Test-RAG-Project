@@ -16,7 +16,7 @@ class Document:
     metadata: Dict[str,Any]
     source:str
 
-class Baseloader(ABC):
+class BaseLoader(ABC):
     """Abstract base class for document loaders.
     All loaders must implement:
     -load(): load documents from a source

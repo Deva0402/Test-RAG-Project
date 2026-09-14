@@ -1,44 +1,80 @@
-from importlib import metadata
 import re
 from typing import List
-from xml.dom.minidom import Document
 
-import re._compiler
 from healthcare_rag.data.loaders.base_loader import Document
+
+
 class TextCleaner:
 
     def __init__(self):
-        self.page_number_pattern=re._compile(r'\n\s*Page\s+\d+\s*\n',re.IGNORECASE)
-        self.header_pattern=re.compile(r'\n\s*Header\s*\n',re.IGNORECASE)
-        self.footer_pattern=re.compile(r'\n\s*Footer\s*\n',re.IGNORECASE)
-        self.url_pattern=re.compile(r'http[s]?://\s+')
-        self.email_pattern=re.compile(r'\s+@\s+\.\s+')
+        self.page_number_pattern = re.compile(
+            r"\n\s*Page\s+\d+\s*\n",
+            re.IGNORECASE,
+        )
 
-    def clean(self,documents: List[Document])->List[Document]:
-        cleaned_docs=[]
-        for doc in documents:
-            cleaned_content=self._clean_text(doc.content)
-            cleaned_doc=Document(
-                content=cleaned_content,
-                metadata=doc.metadata,
-                source=doc.source
+        self.header_pattern = re.compile(
+            r"\n\s*Header\s*\n",
+            re.IGNORECASE,
+        )
 
+        self.footer_pattern = re.compile(
+            r"\n\s*Footer\s*\n",
+            re.IGNORECASE,
+        )
+
+        self.url_pattern = re.compile(
+            r"https?://\S+",
+            re.IGNORECASE,
+        )
+
+        self.email_pattern = re.compile(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
+        )
+
+    def clean(self, documents: List[Document]) -> List[Document]:
+        cleaned_documents = []
+
+        for document in documents:
+            cleaned_content = self._clean_text(document.content)
+
+            cleaned_documents.append(
+                Document(
+                    content=cleaned_content,
+                    metadata=document.metadata.copy(),
+                    source=document.source,
+                )
             )
-            cleaned_docs.append(cleaned_doc)
-        return cleaned_docs
 
-    def _clean_text(self, text: str)-> str:
+        return cleaned_documents
+
+    def _clean_text(self, text: str) -> str:
         if not text:
             return ""
-        text=self.page_number_pattern.sub('\n',text)
-        text=self.header_pattern.sub('/n',text)
-        text=self.footer_pattern.sub('/n',text)
 
-        text=re.sub(r'\s+',' ', text)
-        text=re.sub(r'\n\s*\n','\n\n',text)
-        text=text.strip()
+        text = self.page_number_pattern.sub("\n", text)
+        text = self.header_pattern.sub("\n", text)
+        text = self.footer_pattern.sub("\n", text)
 
-        return text
-    def remove_empty_chunks(self,documents: List[Document])->List[Document] :
+        text = self.url_pattern.sub("", text)
+        text = self.email_pattern.sub("", text)
 
-        return [doc for doc in documents if doc.content and len(doc.content.strip()) >50 ]       
+        # Normalize spaces without destroying newlines.
+        text = re.sub(r"[ \t]+", " ", text)
+
+        # Normalize excessive blank lines.
+        text = re.sub(r"\n{3,}", "\n\n", text)
+
+        return text.strip()
+
+    def remove_empty_chunks(
+        self,
+        documents: List[Document],
+        min_length: int = 50,
+    ) -> List[Document]:
+
+        return [
+            document
+            for document in documents
+            if document.content
+            and len(document.content.strip()) >= min_length
+        ]

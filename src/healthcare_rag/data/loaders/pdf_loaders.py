@@ -6,9 +6,9 @@ from importlib import metadata
 from typing import List
 from pathlib import Path
 from pypdf import PdfReader
-from healthcare_rag.data.loaders.base_loader import Baseloader, Document
+from healthcare_rag.data.loaders.base_loader import BaseLoader, Document
 
-class PDFLoader(Baseloader):
+class PDFLoader(BaseLoader):
     """
     Load text content from PDF files.
     Suitable for medical guidelines, research papers, clinical documents.
