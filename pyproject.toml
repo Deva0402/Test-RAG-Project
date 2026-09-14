@@ -1,0 +1,21 @@
+[build-system]
+requires =["setuptools>=68.0","wheel"]
+build-backend="setuptools.build_meta"
+
+[project]
+name="healthcare-rag-assistant"
+version="0.1.0"
+description="healthcare medical Q&A RAG system with optimized LLM inference"
+requires-python =">=3.10"
+
+[tool.setuptools.packages.find]
+where=["src"]
+
+[tool.black]
+line-length =88
+target-version =["py310","py311"]
+
+[tool.pytest.ini_options]
+testpaths=["tests"]
+asyncio_mode="auto"
+addopts="-v --tb=short"
