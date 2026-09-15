@@ -1,4 +1,3 @@
-from sklearn import pipeline
 
 from healthcare_rag.rag.pipeline import RAGPipeline
 def test_rag_pipeline():

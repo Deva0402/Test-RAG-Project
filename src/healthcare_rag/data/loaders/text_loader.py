@@ -1,8 +1,6 @@
 from typing import List
 from pathlib import Path
 
-
-from sympy import content
 from healthcare_rag.data.loaders.base_loader import BaseLoader, Document
 
 class TextLoader(BaseLoader):

@@ -7,8 +7,6 @@ from importlib import metadata
 from typing import List,Dict,Any
 from dataclasses import dataclass
 
-from numpy import source
-
 @dataclass
 class Document:
     """Represents a loaded document with metadata."""

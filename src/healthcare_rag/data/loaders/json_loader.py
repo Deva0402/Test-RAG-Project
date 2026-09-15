@@ -6,10 +6,10 @@ common for medical q&a dataset
 
 
 import json
-from typing import List,Dict,Any
+from typing import List,Dict,Any,Optional
 from pathlib import Path
 
-from git import Optional
+
 from healthcare_rag.data.loaders.base_loader import BaseLoader, Document
 
 class JSONLoader(BaseLoader):

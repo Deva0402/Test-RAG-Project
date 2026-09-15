@@ -1,13 +1,6 @@
-from importlib import metadata
-from pyexpat.errors import messages
 from typing import List,Dict, Any,Optional
 
-from numpy import source
-from numpy.ma import count
-from opentelemetry import context
-from pydantic_settings import sources
-from rich import prompt
-from healthcare_rag.rag.retrieval import vector_retriever
+from httpx import get
 from healthcare_rag.rag.retrieval.base_retriever import BaseRetriever
 from healthcare_rag.rag.retrieval.vector_retriever import VectorRetriever
 from healthcare_rag.rag.retrieval.hybrid_retriever import HybridRetriever
@@ -24,8 +17,6 @@ class RAGPipeline:
     ):
         if retriever:
             self.retriever=retriever
-        elif retriever_type=="vector" :
-            self.retriever=VectorRetriever()
         elif retriever_type=="hybrid" and documents:
             self.retriever=HybridRetriever(documents=documents)
         else:
@@ -37,11 +28,14 @@ class RAGPipeline:
 
     def _build_context(self,retrieved_docs: List[Dict[str,Any]]) -> str :
 
-        context_parts=[]
+        context_parts: List[str]=[]
+
         for i, doc in enumerate(retrieved_docs,1):
-            text=doc.get('text','')
+            text=doc.get("content") or doc.get("text") or ""
             metadata=doc.get('metadata',{})
-            source=metadata.get('source','unknown')
+            source=(
+                doc.get("source") or metadata.get("filename") or "unknown"
+            )
 
             context_parts.append(f"[source{i}:{source}]\n{text}")
         return "\n\n".join(context_parts)
@@ -53,13 +47,17 @@ class RAGPipeline:
         max_tokens: int=512,
         temperature: float=0.1
     ) -> Dict[str,Any]:
+        if not question or not question.strip():
+            raise ValueError("question cannot be empty")
+        
         retrieved_docs=self.retriever.retrieve(question,top_k=top_k)
 
         if not retrieved_docs:
             return {
-                "answer":"I couldn't find relevant information in the medical database to answer your question.please consult with a healthcare professional.",
+                "answer":("I couldn't find relevant information in the medical database to answer your question.please consult with a healthcare professional."),
                 "sources":[],
-                "retrieved_count":0
+                "retrieved_count":0,
+                "context":"",
             }
         context=self._build_context(retrieved_docs)
 
@@ -70,7 +68,7 @@ class RAGPipeline:
 
         messages=[
             {"role":"system","content":self.system_prompt},
-            {"role":"user","content":prompt}
+            {"role":"user","content":prompt},
         ]
 
         answer=self.llm.generate_chat(
@@ -79,10 +77,15 @@ class RAGPipeline:
             temperature=temperature
         )
 
-        sources=[
-            doc.get('metadata',{}).get('source','unknown')
-            for doc in retrieved_docs
-        ]
+        sources: List[str]=[]
+            
+        for doc in retrieved_docs:
+            metadata=doc.get('metadata',{})
+            src=doc.get("source") or metadata.get("source") or metadata.get("filename")
+            if src:
+                sources.append(str(src))
+            
+        
         return {
             "answer":answer,
             "source": list(set(sources)),
